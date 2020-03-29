@@ -6,65 +6,96 @@ public class RopeGenerator : MonoBehaviour
 {
     // Start is called before the first frame update
 
-    public int offsetSize;
-
-    public GameObject pointA;
-    public GameObject pointB;
+    public int offsetSize; 
     public GameObject Ropelink;
-
+    public int links;
     public GameObject[] Ropelinks;
 
-    Rigidbody rgbPointA;
-    Rigidbody rgbPointB;
-
+    GameObject A;
+    GameObject B;
 
     CapsuleCollider ColliderRopelink;
 
+    bool isrunnig = false;
 
-
-
-    void Start()
+    void start()
     {
-        rgbPointA = pointA.GetComponent<Rigidbody>();
-        rgbPointB = pointB.GetComponent<Rigidbody>();
-        ColliderRopelink = Ropelink.GetComponent<CapsuleCollider>();
+        isrunnig = !isrunnig;
+     
 
-        float dis = Vector3.Distance(pointB.transform.position, pointA.transform.position);
-        int NumberofJoints = Mathf.RoundToInt(dis / ColliderRopelink.height) + offsetSize;
-        Ropelinks = new GameObject[NumberofJoints];
-
-        for (int i = 0; i < NumberofJoints; i++)
-        {
-            GameObject link = Instantiate(Ropelink);
-            FixedJoint joint = link.GetComponent<FixedJoint>();
-
-            Ropelinks[i] = link;
-            if (i == 0)
-            {
-                joint.connectedBody = rgbPointA;                
-            }
-            else if(i != 0 && i < NumberofJoints-1)
-            {
-                joint.connectedBody = Ropelinks[i - 1].GetComponent<Rigidbody>();
-            }
-            else
-            {
-                joint.connectedBody = Ropelinks[i - 1].GetComponent<Rigidbody>();
-                FixedJoint secondJointlink = link.AddComponent<FixedJoint>();
-                secondJointlink.connectedBody = rgbPointB;
-            }        
-                
-            
-
-            
-            
-        }
-
-        
-        
 
 
     }
+    IEnumerator Destroy(GameObject go)
+    {
+        yield return new WaitForEndOfFrame();
+        DestroyImmediate(go);
+    }
+    void OnValidate()
+    {
+        if (!isrunnig)
+        {            
+            StartCoroutine(Destroy(A));
+            StartCoroutine(Destroy(B));
+
+            for (int i = 0; i < Ropelinks.Length; i++)
+            {            
+                StartCoroutine(Destroy(Ropelinks[i]));
+            }
+
+            A = Instantiate(Ropelink);
+            A.AddComponent<Rigidbody>();
+            A.name = "A";
+
+            B = Instantiate(Ropelink);
+            B.AddComponent<Rigidbody>();
+            B.name = "B";
+
+
+
+            ColliderRopelink = Ropelink.GetComponent<CapsuleCollider>();
+
+            int NumberofJoints = links;
+            Ropelinks = new GameObject[NumberofJoints];
+           
+
+            float space = 0.25f;
+
+            for (int i = 0; i < NumberofJoints; i++)
+            {
+
+                if (i == 0)
+                {
+                    Ropelinks[i] = Instantiate(Ropelink);
+                    
+                    FixedJoint joint = A.AddComponent<FixedJoint>();
+                    joint.connectedBody = Ropelinks[i].GetComponent<Rigidbody>();
+                    A.transform.position = Ropelinks[i].transform.position;
+
+                }
+
+                if (i > 0 && i < NumberofJoints)
+                {
+                    Ropelinks[i] = Instantiate(Ropelink, new Vector3(
+                        Ropelinks[i - 1].transform.position.x + space,
+                        Ropelinks[i - 1].transform.position.y,
+                        Ropelinks[i - 1].transform.position.z
+                        ), Ropelinks[i - 1].transform.rotation);
+
+                    FixedJoint joint = Ropelinks[i].GetComponent<FixedJoint>();
+                    joint.connectedBody = Ropelinks[i - 1].GetComponent<Rigidbody>();
+                }
+                if (i == NumberofJoints - 1)
+                {
+                    B.transform.position = Ropelinks[i - 1].transform.position;
+                    FixedJoint joint2 = B.AddComponent<FixedJoint>();
+
+                }
+            }
+
+        }
+    }
+
 
     // Update is called once per frame
     void Update()
