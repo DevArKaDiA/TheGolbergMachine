@@ -15,6 +15,7 @@ public class Cannon : MonoBehaviour
     public Camera mainCamera;
     public GameObject Ball;
     public GameObject SpawnPoint;
+    public ParticleSystem Particles;
 
     GameObject BallInstance;
 
@@ -34,9 +35,7 @@ public class Cannon : MonoBehaviour
             mousePosition.x,
             mousePosition.y,
             CameraCannon.position.z - mainCamera.transform.position.z
-            ));    
-        
-
+            ));
 
         CameraCannon.transform.LookAt(globalPosition);
 
@@ -44,6 +43,7 @@ public class Cannon : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && Ammo > 0)
         {
             BallInstance = Instantiate(Ball, SpawnPoint.transform.position, Ball.transform.rotation);
+            Particles.Play();
             Rigidbody BallridgyBody = BallInstance.GetComponent<Rigidbody>();
             
             BallridgyBody.AddForce((globalPosition - CameraCannon.transform.position)*Force);
